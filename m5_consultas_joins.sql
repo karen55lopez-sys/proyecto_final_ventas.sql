@@ -69,7 +69,6 @@ WHERE v.producto_id IS NULL;
 
 -- ============================================
 -- CONSULTA 4: CONSOLIDADO POR CANAL
--- Criterio: dos períodos de ventas
 -- ============================================
 
 SELECT
@@ -77,20 +76,20 @@ SELECT
     SUM(total_venta) AS total_facturado
 FROM (
     SELECT
-        v.fecha,
+        v.fecha_venta,
         v.cantidad * v.precio_unitario AS total_venta,
         'Online' AS canal
     FROM ventas v
-    WHERE v.fecha BETWEEN '2026-08-01' AND '2026-08-04'
+    WHERE v.fecha_venta BETWEEN '2024-03-05' AND '2024-03-09'
 
     UNION ALL
 
     SELECT
-        v.fecha,
+        v.fecha_venta,
         v.cantidad * v.precio_unitario AS total_venta,
         'Presencial' AS canal
     FROM ventas v
-    WHERE v.fecha BETWEEN '2026-08-05' AND '2026-08-08'
+    WHERE v.fecha_venta BETWEEN '2024-03-10' AND '2024-03-15'
 ) AS ventas_por_canal
 GROUP BY canal
 ORDER BY canal;
