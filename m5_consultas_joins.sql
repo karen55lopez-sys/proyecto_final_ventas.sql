@@ -1,43 +1,36 @@
--- =========================================================
--- MÓDULO 5 - CONSULTAS CON JOINS
--- Cruzando tablas para enriquecer el análisis
--- =========================================================
+-- ============================================
+-- M5 - CONSULTAS CON JOIN
+-- ============================================
 
 
--- =========================================================
--- CONSULTA 1 — VISTA BASE DEL PROYECTO
--- INNER JOIN entre ventas, clientes, productos,
--- categorías y territorios.
--- =========================================================
+-- ============================================
+-- CONSULTA 1: VISTA ENRIQUECIDA DE VENTAS
+-- ============================================
 
 SELECT
-    v.fecha,
-    c.cliente_id,
+    v.fecha_venta,
+    c.id_cliente,
     c.nombre AS nombre_cliente,
-    c.segmento,
+    p.nombre_producto,
+    cat.nombre_categoria AS categoria,
     t.region,
-    p.producto_id,
-    p.nombre AS nombre_producto,
-    cat.nombre AS categoria,
     v.cantidad,
     v.precio_unitario,
     v.cantidad * v.precio_unitario AS total_venta
 FROM ventas v
 INNER JOIN clientes c
-    ON v.cliente_id = c.cliente_id
+    ON v.id_cliente = c.id_cliente
 INNER JOIN productos p
-    ON v.producto_id = p.producto_id
+    ON v.id_producto = p.id_producto
 INNER JOIN categorias cat
-    ON p.categoria_id = cat.categoria_id
+    ON p.id_categoria = cat.id_categoria
 INNER JOIN territorios t
     ON c.territorio_id = t.territorio_id;
 
 
--- =========================================================
--- CONSULTA 2 — CLIENTES SIN VENTAS
--- Identifica clientes registrados que nunca realizaron
--- una compra.
--- =========================================================
+-- ============================================
+-- CONSULTA 2: CLIENTES SIN VENTAS
+-- ============================================
 
 SELECT
     c.nombre,
@@ -45,26 +38,24 @@ SELECT
     c.fecha_registro
 FROM clientes c
 LEFT JOIN ventas v
-    ON c.cliente_id = v.cliente_id
-WHERE v.cliente_id IS NULL;
+    ON c.id_cliente = v.id_cliente
+WHERE v.id_cliente IS NULL;
 
 
--- =========================================================
--- CONSULTA 3 — PRODUCTOS SIN VENTAS
--- Identifica productos del catálogo que no tienen
--- ninguna venta registrada.
--- =========================================================
+-- ============================================
+-- CONSULTA 3: PRODUCTOS SIN VENTAS
+-- ============================================
 
 SELECT
-    p.nombre AS nombre_producto,
-    cat.nombre AS categoria,
+    p.nombre_producto,
+    cat.nombre_categoria AS categoria,
     p.precio
 FROM productos p
 INNER JOIN categorias cat
-    ON p.categoria_id = cat.categoria_id
+    ON p.id_categoria = cat.id_categoria
 LEFT JOIN ventas v
-    ON p.producto_id = v.producto_id
-WHERE v.producto_id IS NULL;
+    ON p.id_producto = v.id_producto
+WHERE v.id_producto IS NULL;
 
 
 -- ============================================
