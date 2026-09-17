@@ -1,73 +1,99 @@
+-- =========================================================
+-- MÓDULO 5 - CONSULTAS CON JOINS
+-- Cruzando tablas para enriquecer el análisis
+-- =========================================================
+
+
+-- =========================================================
+-- CONSULTA 1 — VISTA BASE DEL PROYECTO
+-- INNER JOIN entre ventas, clientes, productos,
+-- categorías y territorios.
+-- =========================================================
+
 SELECT
-    v.fecha_venta,
-    v.id_cliente,
+    v.fecha,
+    c.cliente_id,
     c.nombre AS nombre_cliente,
-    p.nombre_producto,
+    c.segmento,
+    t.region,
+    p.producto_id,
+    p.nombre AS nombre_producto,
+    cat.nombre AS categoria,
     v.cantidad,
     v.precio_unitario,
     v.cantidad * v.precio_unitario AS total_venta
-FROM ventas AS v
-INNER JOIN clientes AS c
-    ON v.id_cliente = c.id_cliente
-INNER JOIN productos AS p
-    ON v.id_producto = p.id_producto
-ORDER BY v.fecha_venta;
+FROM ventas v
+INNER JOIN clientes c
+    ON v.cliente_id = c.cliente_id
+INNER JOIN productos p
+    ON v.producto_id = p.producto_id
+INNER JOIN categorias cat
+    ON p.categoria_id = cat.categoria_id
+INNER JOIN territorios t
+    ON c.territorio_id = t.territorio_id;
+
+
+-- =========================================================
+-- CONSULTA 2 — CLIENTES SIN VENTAS
+-- Identifica clientes registrados que nunca realizaron
+-- una compra.
+-- =========================================================
+
 SELECT
     c.nombre,
     c.email,
     c.fecha_registro
-FROM clientes AS c
-LEFT JOIN ventas AS v
-    ON c.id_cliente = v.id_cliente
-WHERE v.id_cliente IS NULL
-ORDER BY c.nombre;
+FROM clientes c
+LEFT JOIN ventas v
+    ON c.cliente_id = v.cliente_id
+WHERE v.cliente_id IS NULL;
+
+
+-- =========================================================
+-- CONSULTA 3 — PRODUCTOS SIN VENTAS
+-- Identifica productos del catálogo que no tienen
+-- ninguna venta registrada.
+-- =========================================================
+
 SELECT
-    p.nombre_producto,
+    p.nombre AS nombre_producto,
+    cat.nombre AS categoria,
     p.precio
-FROM productos AS p
-LEFT JOIN ventas AS v
-    ON p.id_producto = v.id_producto
-WHERE v.id_producto IS NULL
-ORDER BY p.nombre_producto;
+FROM productos p
+INNER JOIN categorias cat
+    ON p.categoria_id = cat.categoria_id
+LEFT JOIN ventas v
+    ON p.producto_id = v.producto_id
+WHERE v.producto_id IS NULL;
+
+
+-- =========================================================
+-- CONSULTA 4 — CONSOLIDADO POR CANAL
+-- UNION ALL con canales creados mediante valores literales.
+-- Se utiliza venta_id par/impar como criterio de separación
+-- para asignar cada venta a un origen sin duplicarla.
+-- =========================================================
+
 SELECT
-    origen,
-    SUM(total_venta) AS total_ventas
-FROM
-(
+    canal,
+    SUM(total_venta) AS total_facturado,
+    COUNT(*) AS cantidad_ventas
+FROM (
     SELECT
-        cantidad * precio_unitario AS total_venta,
-        'Primer semestre' AS origen
-    FROM ventas
-    WHERE EXTRACT(MONTH FROM fecha_venta) BETWEEN 1 AND 6
+        v.fecha,
+        v.cantidad * v.precio_unitario AS total_venta,
+        'Online' AS canal
+    FROM ventas v
+    WHERE MOD(v.venta_id, 2) = 0
 
     UNION ALL
 
     SELECT
-        cantidad * precio_unitario AS total_venta,
-        'Segundo semestre' AS origen
-    FROM ventas
-    WHERE EXTRACT(MONTH FROM fecha_venta) BETWEEN 7 AND 12
-) AS ventas_por_periodo
-GROUP BY origen
-ORDER BY origen;
-SELECT
-    origen,
-    SUM(total_venta) AS total_ventas
-FROM
-(
-    SELECT
-        cantidad * precio_unitario AS total_venta,
-        'Primer semestre' AS origen
-    FROM ventas
-    WHERE EXTRACT(MONTH FROM fecha_venta) BETWEEN 1 AND 6
-
-    UNION ALL
-
-    SELECT
-        cantidad * precio_unitario AS total_venta,
-        'Segundo semestre' AS origen
-    FROM ventas
-    WHERE EXTRACT(MONTH FROM fecha_venta) BETWEEN 7 AND 12
-) AS ventas_por_periodo
-GROUP BY origen
-ORDER BY origen;
+        v.fecha,
+        v.cantidad * v.precio_unitario AS total_venta,
+        'Presencial' AS canal
+    FROM ventas v
+    WHERE MOD(v.venta_id, 2) <> 0
+) AS ventas_por_canal
+GROUP BY canal
+ORDER BY canal;
