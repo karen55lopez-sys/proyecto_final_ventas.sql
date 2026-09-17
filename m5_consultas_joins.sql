@@ -67,24 +67,21 @@ LEFT JOIN ventas v
 WHERE v.producto_id IS NULL;
 
 
--- =========================================================
--- CONSULTA 4 — CONSOLIDADO POR CANAL
--- UNION ALL con canales creados mediante valores literales.
--- Se utiliza venta_id par/impar como criterio de separación
--- para asignar cada venta a un origen sin duplicarla.
--- =========================================================
+-- ============================================
+-- CONSULTA 4: CONSOLIDADO POR CANAL
+-- Criterio: dos períodos de ventas
+-- ============================================
 
 SELECT
     canal,
-    SUM(total_venta) AS total_facturado,
-    COUNT(*) AS cantidad_ventas
+    SUM(total_venta) AS total_facturado
 FROM (
     SELECT
         v.fecha,
         v.cantidad * v.precio_unitario AS total_venta,
         'Online' AS canal
     FROM ventas v
-    WHERE MOD(v.venta_id, 2) = 0
+    WHERE v.fecha BETWEEN '2026-08-01' AND '2026-08-04'
 
     UNION ALL
 
@@ -93,7 +90,7 @@ FROM (
         v.cantidad * v.precio_unitario AS total_venta,
         'Presencial' AS canal
     FROM ventas v
-    WHERE MOD(v.venta_id, 2) <> 0
+    WHERE v.fecha BETWEEN '2026-08-05' AND '2026-08-08'
 ) AS ventas_por_canal
 GROUP BY canal
 ORDER BY canal;
